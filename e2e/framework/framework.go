@@ -17,6 +17,8 @@ var fLocal = flag.Bool("nomad.local", false, "denotes execution is against a loc
 var fSlow = flag.Bool("nomad.slow", false, "toggles execution of slow test suites")
 var fForceAll = flag.Bool("nomad.force", false, "if set, skips all environment checks when filtering test suites")
 
+var pkgFramework = New()
+
 type Framework struct {
 	suites      []*TestSuite
 	provisioner Provisioner
@@ -60,6 +62,11 @@ func (f *Framework) AddSuites(s ...*TestSuite) *Framework {
 	return f
 }
 
+func AddSuites(s ...*TestSuite) *Framework {
+	pkgFramework.AddSuites(s...)
+	return pkgFramework
+}
+
 // Run starts the test framework and runs each TestSuite
 func (f *Framework) Run(t *testing.T) {
 	for _, s := range f.suites {
@@ -75,6 +82,10 @@ func (f *Framework) Run(t *testing.T) {
 		})
 	}
 
+}
+
+func Run(t *testing.T) {
+	pkgFramework.Run(t)
 }
 
 // runSuite is called from Framework.Run inside of a sub test for each TestSuite
