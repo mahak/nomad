@@ -95,7 +95,7 @@ The test framework honors go test's parallel feature under certain conditions.
 A TestSuite can be created with the Parallel field set to true to enable
 parallel execution of the test cases of the suite. Tests within a test case
 will always be executed sequentially. TC.T() is NOT safe to call from multiple
-gorouties, therefore TC.T().Parallel() should NEVER be called from a test of a
+goroutines, therefore TC.T().Parallel() should NEVER be called from a test of a
 TestCase
 
 Since test cases have the potential to work with a shared Nomad cluster in parallel
