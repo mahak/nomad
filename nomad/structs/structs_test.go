@@ -1563,6 +1563,167 @@ func TestConstraint_Validate(t *testing.T) {
 	}
 }
 
+func TestAffinity_Validate(t *testing.T) {
+
+	type tc struct {
+		affinity *Affinity
+		err      error
+		name     string
+	}
+
+	testCases := []tc{
+		{
+			affinity: &Affinity{},
+			err:      fmt.Errorf("Missing affinity operand"),
+		},
+		{
+			affinity: &Affinity{
+				Operand: "=",
+				LTarget: "${meta.node_class}",
+				Weight:  10,
+			},
+			err: fmt.Errorf("Operator \"=\" requires an RTarget"),
+		},
+		{
+			affinity: &Affinity{
+				Operand: "=",
+				LTarget: "${meta.node_class}",
+				RTarget: "c4",
+				Weight:  0,
+			},
+			err: fmt.Errorf("Affinity weight cannot be zero"),
+		},
+		{
+			affinity: &Affinity{
+				Operand: "=",
+				LTarget: "${meta.node_class}",
+				RTarget: "c4",
+				Weight:  500,
+			},
+			err: fmt.Errorf("Affinity weight must be within the range [-100,100]"),
+		},
+		{
+			affinity: &Affinity{
+				Operand: "=",
+				LTarget: "${node.class}",
+				Weight:  10,
+			},
+			err: fmt.Errorf("Operator \"=\" requires an RTarget"),
+		},
+		{
+			affinity: &Affinity{
+				Operand: "version",
+				LTarget: "${meta.os}",
+				RTarget: ">>2.0",
+				Weight:  500,
+			},
+			err: fmt.Errorf("Version affinity is invalid"),
+		},
+		{
+			affinity: &Affinity{
+				Operand: "regexp",
+				LTarget: "${meta.os}",
+				RTarget: "\\K2.0",
+				Weight:  100,
+			},
+			err: fmt.Errorf("Regular expression failed to compile"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.affinity.Validate()
+			if tc.err != nil {
+				require.NotNil(t, err)
+				require.Contains(t, err.Error(), tc.err.Error())
+			} else {
+				require.Nil(t, err)
+			}
+		})
+
+	}
+
+	/*
+		c = &Constraint{
+			LTarget: "$attr.kernel.name",
+			RTarget: "linux",
+			Operand: "=",
+		}
+		err = c.Validate()
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+
+		// Perform additional regexp validation
+		c.Operand = ConstraintRegex
+		c.RTarget = "(foo"
+		err = c.Validate()
+		mErr = err.(*multierror.Error)
+		if !strings.Contains(mErr.Errors[0].Error(), "missing closing") {
+			t.Fatalf("err: %s", err)
+		}
+
+		// Perform version validation
+		c.Operand = ConstraintVersion
+		c.RTarget = "~> foo"
+		err = c.Validate()
+		mErr = err.(*multierror.Error)
+		if !strings.Contains(mErr.Errors[0].Error(), "Malformed constraint") {
+			t.Fatalf("err: %s", err)
+		}
+
+		// Perform distinct_property validation
+		c.Operand = ConstraintDistinctProperty
+		c.RTarget = "0"
+		err = c.Validate()
+		mErr = err.(*multierror.Error)
+		if !strings.Contains(mErr.Errors[0].Error(), "count of 1 or greater") {
+			t.Fatalf("err: %s", err)
+		}
+
+		c.RTarget = "-1"
+		err = c.Validate()
+		mErr = err.(*multierror.Error)
+		if !strings.Contains(mErr.Errors[0].Error(), "to uint64") {
+			t.Fatalf("err: %s", err)
+		}
+
+		// Perform distinct_hosts validation
+		c.Operand = ConstraintDistinctHosts
+		c.LTarget = ""
+		c.RTarget = ""
+		if err := c.Validate(); err != nil {
+			t.Fatalf("expected valid constraint: %v", err)
+		}
+
+		// Perform set_contains validation
+		c.Operand = ConstraintSetContains
+		c.RTarget = ""
+		err = c.Validate()
+		mErr = err.(*multierror.Error)
+		if !strings.Contains(mErr.Errors[0].Error(), "requires an RTarget") {
+			t.Fatalf("err: %s", err)
+		}
+
+		// Perform LTarget validation
+		c.Operand = ConstraintRegex
+		c.RTarget = "foo"
+		c.LTarget = ""
+		err = c.Validate()
+		mErr = err.(*multierror.Error)
+		if !strings.Contains(mErr.Errors[0].Error(), "No LTarget") {
+			t.Fatalf("err: %s", err)
+		}
+
+		// Perform constraint type validation
+		c.Operand = "foo"
+		err = c.Validate()
+		mErr = err.(*multierror.Error)
+		if !strings.Contains(mErr.Errors[0].Error(), "Unknown constraint type") {
+			t.Fatalf("err: %s", err)
+		}*/
+}
+
 func TestUpdateStrategy_Validate(t *testing.T) {
 	u := &UpdateStrategy{
 		MaxParallel:      0,
